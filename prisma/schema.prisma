@@ -1,0 +1,112 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  assets         Asset[]
+  vulnerabilities Vulnerability[]
+  findings       Finding[]
+  users          User[]
+
+  @@map("organizations")
+}
+
+model User {
+  id             String       @id @default(cuid())
+  clerkId        String       @unique @map("clerk_id")
+  email          String
+  role           String       @default("analyst")
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  auditLogs AuditLog[]
+
+  @@map("users")
+}
+
+model Asset {
+  id             String       @id @default(cuid())
+  hostname       String
+  ip             String?
+  port           Int?
+  protocol       String?
+  service        String?
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  findings Finding[]
+
+  @@unique([hostname, organizationId])
+  @@map("assets")
+}
+
+model Vulnerability {
+  id             String       @id @default(cuid())
+  cve            String       @unique
+  cvss           Float?
+  description    String?
+  kevFlag        Boolean      @default(false) @map("kev_flag")
+  kevDateAdded   DateTime?    @map("kev_date_added")
+  osvId          String?      @map("osv_id")
+  fixedVersion   String?      @map("fixed_version")
+  organizationId String       @map("organization_id")
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  createdAt      DateTime     @default(now()) @map("created_at")
+  updatedAt      DateTime     @updatedAt @map("updated_at")
+
+  findings Finding[]
+
+  @@map("vulnerabilities")
+}
+
+model Finding {
+  id               String        @id @default(cuid())
+  status           String        @default("open")
+  priority         String        @default("low")
+  notes            String?
+  discoveredAt     DateTime      @default(now()) @map("discovered_at")
+  remediatedAt     DateTime?     @map("remediated_at")
+  assetId          String        @map("asset_id")
+  asset            Asset         @relation(fields: [assetId], references: [id])
+  vulnerabilityId  String        @map("vulnerability_id")
+  vulnerability    Vulnerability @relation(fields: [vulnerabilityId], references: [id])
+  organizationId   String        @map("organization_id")
+  organization     Organization  @relation(fields: [organizationId], references: [id])
+  createdAt        DateTime      @default(now()) @map("created_at")
+  updatedAt        DateTime      @updatedAt @map("updated_at")
+
+  auditLogs AuditLog[]
+
+  @@unique([assetId, vulnerabilityId])
+  @@map("findings")
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  action      String
+  entityType  String   @map("entity_type")
+  entityId    String   @map("entity_id")
+  changes     Json?
+  userId      String   @map("user_id")
+  user        User     @relation(fields: [userId], references: [id])
+  findingId   String?  @map("finding_id")
+  finding     Finding? @relation(fields: [findingId], references: [id])
+  createdAt   DateTime @default(now()) @map("created_at")
+
+  @@map("audit_logs")
+}
