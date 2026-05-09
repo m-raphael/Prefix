@@ -1,9 +1,11 @@
 import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
+import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { KevSyncButton } from "./kev-sync-button";
 import { CsvUploadForm } from "./csv-upload-form";
 import { PrioritizeButton } from "./prioritize-button";
+import { FindingsSection } from "./findings-section";
 
 export default async function DashboardPage() {
   const { userId: clerkId } = await auth();
@@ -91,6 +93,10 @@ export default async function DashboardPage() {
             <p className="mt-1 text-2xl font-bold text-green-700">{low}</p>
           </div>
         </div>
+
+        <Suspense fallback={<div className="mt-8 text-sm text-zinc-400">Loading findings...</div>}>
+          <FindingsSection isAdmin={isAdmin} />
+        </Suspense>
 
         <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
           <div className="rounded-lg border bg-white p-6">
