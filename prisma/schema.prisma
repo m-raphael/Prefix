@@ -57,7 +57,7 @@ model Asset {
 
 model Vulnerability {
   id             String       @id @default(cuid())
-  cve            String       @unique
+  cve            String
   cvss           Float?
   description    String?
   kevFlag        Boolean      @default(false) @map("kev_flag")
@@ -71,6 +71,7 @@ model Vulnerability {
 
   findings Finding[]
 
+  @@unique([cve, organizationId])
   @@map("vulnerabilities")
 }
 
