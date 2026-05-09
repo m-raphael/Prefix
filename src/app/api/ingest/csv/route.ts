@@ -2,6 +2,8 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAuth } from "@/lib/auth";
 import { parseCsv } from "@/lib/csv";
+import { isInternetFacing } from "@/lib/ip";
+import { reScoreOrg } from "@/lib/score";
 
 export async function POST(request: Request) {
   try {
@@ -29,6 +31,8 @@ export async function POST(request: Request) {
     let findingsUpdated = 0;
 
     for (const row of rows) {
+      const internetFacing = isInternetFacing(row.ip);
+
       const asset = await prisma.asset.upsert({
         where: { hostname_organizationId: { hostname: row.hostname, organizationId: ctx.organizationId } },
         update: {
@@ -36,6 +40,7 @@ export async function POST(request: Request) {
           port: row.port || null,
           protocol: row.protocol || null,
           service: row.service || null,
+          internetFacing,
         },
         create: {
           hostname: row.hostname,
@@ -43,6 +48,7 @@ export async function POST(request: Request) {
           port: row.port || null,
           protocol: row.protocol || null,
           service: row.service || null,
+          internetFacing,
           organizationId: ctx.organizationId,
         },
       });
@@ -93,12 +99,14 @@ export async function POST(request: Request) {
       }
     }
 
+    const scoreResult = await reScoreOrg(ctx.organizationId);
+
     await prisma.auditLog.create({
       data: {
         action: "csv_ingest",
         entityType: "finding",
         entityId: "bulk",
-        changes: { assetsCreated, assetsUpdated, vulnsCreated, vulnsUpdated, findingsCreated, findingsUpdated, parseErrors: errors.length },
+        changes: { assetsCreated, assetsUpdated, vulnsCreated, vulnsUpdated, findingsCreated, findingsUpdated, parseErrors: errors.length, ...scoreResult },
         userId: ctx.userId,
       },
     });

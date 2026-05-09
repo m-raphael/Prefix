@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireAdmin } from "@/lib/auth";
 import { fetchKevFeed, parseKevDate } from "@/lib/kev";
+import { reScoreOrg } from "@/lib/score";
 
 export async function POST() {
   try {
@@ -49,17 +50,19 @@ export async function POST() {
       }
     }
 
+    const scoreResult = await reScoreOrg(ctx.organizationId);
+
     await prisma.auditLog.create({
       data: {
         action: "kev_sync",
         entityType: "vulnerability",
         entityId: "bulk",
-        changes: { inserted, updated, feedVersion: feed.catalogVersion.version },
+        changes: { inserted, updated, feedVersion: feed.catalogVersion.version, ...scoreResult },
         userId: ctx.userId,
       },
     });
 
-    return NextResponse.json({ inserted, updated, total: feed.vulnerabilities.length });
+    return NextResponse.json({ inserted, updated, feedTotal: feed.vulnerabilities.length, ...scoreResult });
   } catch (err) {
     const message = err instanceof Error ? err.message : "Unknown error";
     const status = message === "Unauthorized" ? 401 : message === "Forbidden" ? 403 : 500;

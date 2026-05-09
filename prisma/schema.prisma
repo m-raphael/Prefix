@@ -44,6 +44,7 @@ model Asset {
   port           Int?
   protocol       String?
   service        String?
+  internetFacing Boolean        @default(false) @map("internet_facing")
   organizationId String       @map("organization_id")
   organization   Organization @relation(fields: [organizationId], references: [id])
   createdAt      DateTime     @default(now()) @map("created_at")

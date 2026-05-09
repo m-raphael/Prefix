@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { prisma } from "@/lib/db";
 import { KevSyncButton } from "./kev-sync-button";
 import { CsvUploadForm } from "./csv-upload-form";
+import { PrioritizeButton } from "./prioritize-button";
 
 export default async function DashboardPage() {
   const { userId: clerkId } = await auth();
@@ -66,7 +67,10 @@ export default async function DashboardPage() {
           <h1 className="text-2xl font-semibold tracking-tight">
             Vulnerability Dashboard
           </h1>
-          {isAdmin && <KevSyncButton />}
+          <div className="flex items-center gap-3">
+            <PrioritizeButton />
+            {isAdmin && <KevSyncButton />}
+          </div>
         </div>
 
         <div className="mt-6 grid grid-cols-4 gap-4">
