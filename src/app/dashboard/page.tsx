@@ -4,7 +4,7 @@ import { Suspense } from "react";
 import { prisma } from "@/lib/db";
 import { Sidebar } from "@/components/sidebar";
 import { KevSyncButton } from "./kev-sync-button";
-import { CsvUploadForm } from "./csv-upload-form";
+import { ScanUploadForm } from "./csv-upload-form";
 import { PrioritizeButton } from "./prioritize-button";
 import { FindingsSection } from "./findings-section";
 import { ExportControls } from "@/components/export-controls";
@@ -78,9 +78,9 @@ export default async function DashboardPage() {
           <div className="rounded-lg border bg-white p-6">
             <h2 className="text-sm font-semibold text-zinc-900">Ingest Scan Data</h2>
             <p className="mt-1 text-sm text-zinc-500">
-              Upload a CSV export from your vulnerability scanner.
+              Upload from Nessus, Trivy, Nuclei, or CSV.
             </p>
-            <CsvUploadForm />
+            <ScanUploadForm />
           </div>
 
           <div className="rounded-lg border bg-white p-6">

@@ -5,10 +5,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 
-export function CsvUploadForm() {
+export function ScanUploadForm() {
   const [file, setFile] = useState<File | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState<Record<string, number> | null>(null);
+  const [result, setResult] = useState<Record<string, number | string> | null>(null);
   const [error, setError] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -31,7 +31,7 @@ export function CsvUploadForm() {
     formData.append("file", file);
 
     try {
-      const res = await fetch("/api/ingest/csv", {
+      const res = await fetch("/api/ingest", {
         method: "POST",
         body: formData,
       });
@@ -54,14 +54,14 @@ export function CsvUploadForm() {
   return (
     <form onSubmit={handleSubmit} className="mt-4 space-y-4">
       <div>
-        <Label htmlFor="csv-file" className="text-xs text-zinc-500">
-          CSV file
+        <Label htmlFor="scan-file" className="text-xs text-zinc-500">
+          Scan file — .nessus, .csv, Nuclei JSON, Trivy JSON
         </Label>
         <Input
-          id="csv-file"
+          id="scan-file"
           ref={inputRef}
           type="file"
-          accept=".csv"
+          accept=".csv,.nessus,.xml,.json"
           onChange={handleFileChange}
           className="mt-1"
         />
@@ -81,8 +81,13 @@ export function CsvUploadForm() {
         </div>
       )}
 
+      {result && (
+        <p className="text-xs text-zinc-400">
+          Format detected: <span className="font-medium text-zinc-600">{result.format}</span>
+        </p>
+      )}
       <Button type="submit" disabled={!file || loading} size="sm">
-        {loading ? "Uploading..." : "Upload CSV"}
+        {loading ? "Uploading..." : "Upload"}
       </Button>
     </form>
   );
