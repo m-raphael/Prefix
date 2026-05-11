@@ -6,6 +6,7 @@ import { KevSyncButton } from "./kev-sync-button";
 import { CsvUploadForm } from "./csv-upload-form";
 import { PrioritizeButton } from "./prioritize-button";
 import { FindingsSection } from "./findings-section";
+import { ExportControls } from "@/components/export-controls";
 
 export default async function DashboardPage() {
   const { userId: clerkId } = await auth();
@@ -98,7 +99,7 @@ export default async function DashboardPage() {
           <FindingsSection isAdmin={isAdmin} />
         </Suspense>
 
-        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-2">
+        <div className="mt-8 grid grid-cols-1 gap-6 lg:grid-cols-3">
           <div className="rounded-lg border bg-white p-6">
             <h2 className="text-sm font-semibold text-zinc-900">Ingest Scan Data</h2>
             <p className="mt-1 text-sm text-zinc-500">
@@ -110,6 +111,11 @@ export default async function DashboardPage() {
           <div className="rounded-lg border bg-white p-6">
             <h2 className="text-sm font-semibold text-zinc-900">Recent Activity</h2>
             <RecentActivity orgId={user.organizationId} />
+          </div>
+
+          <div className="rounded-lg border bg-white p-6">
+            <h2 className="text-sm font-semibold text-zinc-900 mb-4">Export</h2>
+            <ExportControls />
           </div>
         </div>
       </main>
