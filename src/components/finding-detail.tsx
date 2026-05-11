@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import {
   Dialog,
   DialogContent,
@@ -9,6 +10,8 @@ import {
 } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+
+type AiResult = { summary: string; remediation: string; cached: boolean } | null;
 
 export function FindingDetail({
   finding,
@@ -30,6 +33,10 @@ export function FindingDetail({
   onClose: () => void;
   onStatusChange: (status: string) => void;
 }) {
+  const [aiResult, setAiResult] = useState<AiResult>(null);
+  const [aiLoading, setAiLoading] = useState(false);
+  const [aiError, setAiError] = useState<string | null>(null);
+
   const priorityColor: Record<string, string> = {
     critical: "bg-red-100 text-red-700",
     high: "bg-orange-100 text-orange-700",
@@ -53,9 +60,31 @@ export function FindingDetail({
     { value: "risk_accepted", label: "Risk Accepted", adminOnly: true },
   ];
 
+  async function fetchAiExplanation() {
+    setAiLoading(true);
+    setAiError(null);
+    try {
+      const res = await fetch(`/api/ai/explain/${encodeURIComponent(finding.vulnerability.cve)}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          hostname: finding.asset.hostname,
+          service: finding.asset.service,
+          fixedVersion: finding.vulnerability.fixedVersion,
+        }),
+      });
+      if (!res.ok) throw new Error((await res.json()).error ?? res.statusText);
+      setAiResult(await res.json());
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : "Failed to fetch explanation");
+    } finally {
+      setAiLoading(false);
+    }
+  }
+
   return (
     <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
-      <DialogContent className="max-w-2xl">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             {finding.vulnerability.cve}
@@ -98,6 +127,41 @@ export function FindingDetail({
               <h4 className="font-semibold text-zinc-900">Internet Facing</h4>
               <p className="mt-1 text-zinc-600">{finding.asset.internetFacing ? "Yes" : "No"}</p>
             </div>
+          </div>
+
+          {/* AI Explanation */}
+          <div className="rounded-lg border border-blue-100 bg-blue-50 p-4 space-y-3">
+            <div className="flex items-center justify-between">
+              <h4 className="font-semibold text-blue-900 text-sm">AI Explanation</h4>
+              {!aiResult && (
+                <Button size="sm" variant="outline" onClick={fetchAiExplanation} disabled={aiLoading}
+                  className="h-7 text-xs border-blue-200 text-blue-700 hover:bg-blue-100">
+                  {aiLoading ? "Generating…" : "Explain this vulnerability"}
+                </Button>
+              )}
+              {aiResult && (
+                <span className="text-xs text-blue-400">{aiResult.cached ? "cached" : "fresh"}</span>
+              )}
+            </div>
+
+            {aiError && <p className="text-xs text-red-600">{aiError}</p>}
+
+            {aiResult && (
+              <div className="space-y-3">
+                <div>
+                  <p className="text-xs font-medium text-blue-800 mb-1">Plain-language summary</p>
+                  <p className="text-sm text-blue-900">{aiResult.summary}</p>
+                </div>
+                <div>
+                  <p className="text-xs font-medium text-blue-800 mb-1">Remediation steps</p>
+                  <p className="text-sm text-blue-900 whitespace-pre-line">{aiResult.remediation}</p>
+                </div>
+                <Button size="sm" variant="ghost" onClick={fetchAiExplanation} disabled={aiLoading}
+                  className="h-6 text-xs text-blue-500 px-0 hover:bg-transparent">
+                  {aiLoading ? "Refreshing…" : "Refresh"}
+                </Button>
+              </div>
+            )}
           </div>
 
           <div>
