@@ -2,6 +2,7 @@ import { auth } from "@clerk/nextjs/server";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { prisma } from "@/lib/db";
+import { Sidebar } from "@/components/sidebar";
 import { KevSyncButton } from "./kev-sync-button";
 import { CsvUploadForm } from "./csv-upload-form";
 import { PrioritizeButton } from "./prioritize-button";
@@ -9,7 +10,11 @@ import { FindingsSection } from "./findings-section";
 import { ExportControls } from "@/components/export-controls";
 
 export default async function DashboardPage() {
-  const { userId: clerkId } = await auth();
+  const session = await auth();
+  const clerkId =
+    session.userId ??
+    (process.env.DEV_BYPASS_AUTH === "true" ? "dev" : null);
+
   if (!clerkId) redirect("/sign-in");
 
   const user = await prisma.user.findUnique({
@@ -34,37 +39,7 @@ export default async function DashboardPage() {
 
   return (
     <div className="flex min-h-screen bg-zinc-50">
-      <aside className="w-64 border-r bg-white p-6">
-        <h2 className="text-lg font-semibold tracking-tight">Prefix</h2>
-        <nav className="mt-8 flex flex-col gap-2">
-          <a
-            href="/dashboard"
-            className="rounded-md bg-zinc-100 px-3 py-2 text-sm font-medium"
-          >
-            Dashboard
-          </a>
-          <a
-            href="#"
-            className="rounded-md px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
-          >
-            Assets
-          </a>
-          <a
-            href="#"
-            className="rounded-md px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
-          >
-            Reports
-          </a>
-          {isAdmin && (
-            <a
-              href="#"
-              className="rounded-md px-3 py-2 text-sm text-zinc-600 hover:bg-zinc-50"
-            >
-              Admin
-            </a>
-          )}
-        </nav>
-      </aside>
+      <Sidebar current="/dashboard" isAdmin={isAdmin} />
       <main className="flex-1 p-8">
         <div className="flex items-center justify-between">
           <h1 className="text-2xl font-semibold tracking-tight">

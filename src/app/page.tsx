@@ -13,16 +13,10 @@ export default function Home() {
         </p>
         <div className="mt-8 flex flex-col gap-3 sm:flex-row sm:justify-center">
           <Link
-            href="/sign-up"
+            href="/dashboard"
             className="rounded-lg bg-zinc-900 px-6 py-3 text-sm font-medium text-white hover:bg-zinc-800"
           >
-            Get Started
-          </Link>
-          <Link
-            href="/sign-in"
-            className="rounded-lg border border-zinc-300 px-6 py-3 text-sm font-medium text-zinc-700 hover:bg-zinc-100"
-          >
-            Sign In
+            Open Dashboard
           </Link>
         </div>
       </div>

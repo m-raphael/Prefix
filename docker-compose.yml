@@ -1,0 +1,37 @@
+services:
+  db:
+    image: postgres:16
+    container_name: prefix-db
+    environment:
+      POSTGRES_USER: prefix
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: prefix
+    ports:
+      - "5432:5432"
+    volumes:
+      - prefix_db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U prefix"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: prefix-app
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - .env
+    environment:
+      DATABASE_URL: postgresql://prefix:password@db:5432/prefix?schema=public
+    ports:
+      - "3000:3000"
+    profiles:
+      - full
+
+volumes:
+  prefix_db:
