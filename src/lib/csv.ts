@@ -12,18 +12,58 @@ const csvRowSchema = z.object({
 
 export type CsvRow = z.infer<typeof csvRowSchema>;
 
+const COLUMN_ALIASES: Record<string, string> = {
+  host: "hostname",
+  "host name": "hostname",
+  asset: "hostname",
+  target: "hostname",
+  ip_address: "ip",
+  "ip address": "ip",
+  ipaddress: "ip",
+  cve_id: "cve",
+  cve_number: "cve",
+  vulnerability: "cve",
+  vuln: "cve",
+  vuln_id: "cve",
+  vulnerability_id: "cve",
+  cvss_score: "cvss",
+  cvss_base: "cvss",
+  score: "cvss",
+  port_number: "port",
+  proto: "protocol",
+  svc: "service",
+};
+
+function normalizeHeader(h: string): string {
+  const lower = h.toLowerCase().trim().replace(/^"|"$/g, "");
+  return COLUMN_ALIASES[lower] ?? lower;
+}
+
+function detectDelimiter(line: string): string {
+  const counts = { ",": 0, ";": 0, "\t": 0 };
+  for (const ch of line) {
+    if (ch in counts) counts[ch as keyof typeof counts]++;
+  }
+  if (counts[";"] > counts[","] && counts[";"] > counts["\t"]) return ";";
+  if (counts["\t"] > counts[","] && counts["\t"] > counts[";"]) return "\t";
+  return ",";
+}
+
 export function parseCsv(text: string): {
   headers: string[];
   rows: CsvRow[];
   errors: { line: number; message: string }[];
 } {
-  const lines = text.trim().split(/\r?\n/);
+  // Strip BOM
+  const cleaned = text.replace(/^﻿/, "").trim();
+  const lines = cleaned.split(/\r?\n/);
   if (lines.length < 2) {
     return { headers: [], rows: [], errors: [{ line: 0, message: "CSV has no data rows" }] };
   }
 
-  const rawHeaders = splitCsvLine(lines[0]);
-  const headers = rawHeaders.map((h) => h.toLowerCase().trim());
+  const delimiter = detectDelimiter(lines[0]);
+  const rawHeaders = splitCsvLine(lines[0], delimiter);
+  const headers = rawHeaders.map(normalizeHeader);
 
   const colMap: Record<string, number> = {};
   headers.forEach((h, i) => {
@@ -44,7 +84,7 @@ export function parseCsv(text: string): {
   const errors: { line: number; message: string }[] = [];
 
   for (let i = 1; i < lines.length; i++) {
-    const raw = splitCsvLine(lines[i]);
+    const raw = splitCsvLine(lines[i], delimiter);
     const get = (name: string): string | undefined => {
       const idx = colMap[name];
       if (idx === undefined) return undefined;
@@ -71,7 +111,7 @@ export function parseCsv(text: string): {
   return { headers, rows, errors };
 }
 
-function splitCsvLine(line: string): string[] {
+function splitCsvLine(line: string, delimiter = ","): string[] {
   const result: string[] = [];
   let current = "";
   let inQuotes = false;
@@ -84,7 +124,7 @@ function splitCsvLine(line: string): string[] {
       } else {
         inQuotes = !inQuotes;
       }
-    } else if (char === "," && !inQuotes) {
+    } else if (char === delimiter && !inQuotes) {
       result.push(current.trim());
       current = "";
     } else {

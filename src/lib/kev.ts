@@ -15,10 +15,10 @@ const kevItemSchema = z.object({
 
 const kevFeedSchema = z.object({
   title: z.string(),
-  catalogVersion: z.object({
-    dateReleased: z.string(),
-    version: z.number(),
-  }),
+  catalogVersion: z.union([
+    z.string(),
+    z.object({ dateReleased: z.string(), version: z.number() }),
+  ]),
   count: z.number(),
   vulnerabilities: z.array(kevItemSchema),
 });

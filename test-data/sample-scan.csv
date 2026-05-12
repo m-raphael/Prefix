@@ -1,0 +1,11 @@
+hostname,ip,cve,cvss,port,protocol,service
+web-prod-01,192.168.1.10,CVE-2021-44228,10.0,443,tcp,https
+web-prod-01,192.168.1.10,CVE-2021-45046,9.0,443,tcp,https
+db-prod-01,192.168.1.20,CVE-2022-22965,9.8,5432,tcp,postgresql
+db-prod-01,192.168.1.20,CVE-2021-3449,7.4,5432,tcp,postgresql
+api-staging-01,10.0.0.5,CVE-2022-0778,7.5,8080,tcp,http
+api-staging-01,10.0.0.5,CVE-2021-41773,9.8,8080,tcp,http
+bastion-01,203.0.113.10,CVE-2023-38408,9.8,22,tcp,ssh
+bastion-01,203.0.113.10,CVE-2023-28531,6.5,22,tcp,ssh
+internal-app,10.0.0.12,CVE-2022-42889,9.8,8443,tcp,https
+internal-app,10.0.0.12,CVE-2021-42340,7.5,8443,tcp,https

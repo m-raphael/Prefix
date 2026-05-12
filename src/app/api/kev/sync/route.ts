@@ -57,7 +57,7 @@ export async function POST() {
         action: "kev_sync",
         entityType: "vulnerability",
         entityId: "bulk",
-        changes: { inserted, updated, feedVersion: feed.catalogVersion.version, ...scoreResult },
+        changes: { inserted, updated, feedVersion: typeof feed.catalogVersion === "string" ? feed.catalogVersion : feed.catalogVersion.version, ...scoreResult },
         userId: ctx.userId,
       },
     });
